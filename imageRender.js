@@ -40,7 +40,7 @@ function getCompleationPercent(){
 }
 
 function getLatestImage(){
-	return latestImage; 
+	return latestImage;
 }
 
 // Starts the server.
@@ -53,7 +53,7 @@ function start(tmp) {
 			process.exit();
 		}
 		console.log(`Server is now listening on address: ${address}`);
-		
+
 	})
 
 	// Get request for if the user opens the url in their web browser.
@@ -64,12 +64,12 @@ function start(tmp) {
 	// Resets the render data and sets it to the new image size.
 	fastify.post("/render-begin", (request, reply) => {
 		console.log("Render begin:");
-	
+
 		render.imageSize = request.body.imageSize;
 		render.numPixels = (render.imageSize.x * render.imageSize.y);
 		render.pixelData = new Uint8Array(render.numPixels * 4);
 		render.nextIndex = 0;
-	
+
 		reply.send();
 	})
 
@@ -77,12 +77,13 @@ function start(tmp) {
 	fastify.post("/data", (request, reply) => {
 		for (let pixelComponent of request.body)
 			render.pixelData[render.nextIndex++] = pixelComponent;
-		
+
 		percentComplete = ((((render.nextIndex - 1) / 4) / render.numPixels) * 100);
 
-		if (Date.now() - lastRenderTime > 1000){
-			
+		if (Date.now() - lastRenderTime > 100) {
+
 			lastRenderTime = Date.now();
+
 			const image = sharp(render.pixelData, {
 				raw: {
 					width: render.imageSize.x,
@@ -90,11 +91,12 @@ function start(tmp) {
 					channels: 4,
 				}
 			});
+
 			image.toFile(tmpdir.concat("/img",".png")).then(
 				() => latestImage *= -1
-
 			);
 		}
+
 		reply.send();
 	})
 
